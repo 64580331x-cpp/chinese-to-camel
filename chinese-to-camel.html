@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中文 → 驼峰英文 | 代码字段命名助手</title>
+  <style>
+    :root {
+      --pink: #ff6b9d;
+      --pink-light: #ffb3d1;
+      --pink-bg: #fff0f6;
+      --purple: #a855f7;
+      --purple-light: #e9d5ff;
+      --bg: #fdf4ff;
+      --card: #ffffff;
+      --text: #1e1b4b;
+      --text-sub: #6b7280;
+      --border: #f0abdc;
+      --success: #10b981;
+      --shadow: 0 4px 24px rgba(255,107,157,0.13);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+      color: var(--text);
+    }
+
+    /* 头部 */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .header .emoji { font-size: 48px; display: block; margin-bottom: 8px; }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header p { color: var(--text-sub); margin-top: 6px; font-size: 14px; }
+
+    /* 主卡片 */
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      max-width: 860px;
+      margin: 0 auto 24px;
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--pink);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 模型选择 */
+    .model-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .model-bar label { font-size: 14px; color: var(--text-sub); white-space: nowrap; }
+    .model-bar select {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      font-size: 14px;
+      background: var(--pink-bg);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+    }
+    .model-bar select:focus { border-color: var(--pink); }
+
+    /* API Key 行 */
+    .apikey-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .apikey-row label { font-size: 14px; color: var(--text-sub); white-space: nowrap; }
+    .apikey-row input {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      font-size: 14px;
+      background: var(--pink-bg);
+      color: var(--text);
+      outline: none;
+    }
+    .apikey-row input:focus { border-color: var(--pink); }
+    .apikey-hint { font-size: 12px; color: var(--text-sub); }
+    .apikey-hint a { color: var(--pink); }
+
+    /* 输入区 */
+    .input-section { margin-bottom: 16px; }
+    .input-label {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      font-size: 15px;
+      resize: vertical;
+      background: var(--pink-bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+      line-height: 1.7;
+    }
+    textarea:focus { border-color: var(--pink); }
+    textarea::placeholder { color: #d1b3c8; }
+
+    /* 操作按钮 */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: white;
+      box-shadow: 0 4px 14px rgba(255,107,157,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,107,157,0.4); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: var(--pink-bg);
+      color: var(--pink);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--pink-light); color: white; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    /* 进度条 */
+    .progress-wrap {
+      display: none;
+      margin: 12px 0;
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--purple-light);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+      border-radius: 99px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+    .progress-text { font-size: 12px; color: var(--text-sub); margin-top: 5px; text-align: right; }
+
+    /* 结果区 */
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .result-title { font-size: 15px; font-weight: 700; color: var(--purple); }
+    .result-actions { display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 5px 14px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--pink-bg);
+      color: var(--pink);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-sm:hover { background: var(--pink); color: white; border-color: var(--pink); }
+
+    /* 结果表格 */
+    .result-table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead { background: linear-gradient(135deg, var(--pink-bg), var(--purple-light)); }
+    th {
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--purple);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 14px;
+      border-top: 1px solid #f5e0f5;
+      vertical-align: middle;
+    }
+    tr:hover td { background: var(--pink-bg); }
+    .cell-zh { color: var(--text); }
+    .cell-camel {
+      font-family: 'Consolas', 'Fira Code', monospace;
+      font-size: 14px;
+      color: var(--purple);
+      font-weight: 600;
+    }
+    .cell-copy {
+      text-align: center;
+      width: 60px;
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.15s;
+      color: var(--text-sub);
+    }
+    .copy-btn:hover { background: var(--pink-light); color: white; }
+    .copy-btn.copied { color: var(--success); }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+    .badge-ok { background: #d1fae5; color: #065f46; }
+    .badge-err { background: #fee2e2; color: #991b1b; }
+    .badge-loading {
+      background: var(--purple-light);
+      color: var(--purple);
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-sub);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+    .empty-state p { font-size: 14px; }
+
+    /* 说明 */
+    .tips {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 4px;
+    }
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .tip-item {
+      background: white;
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .tip-item strong { color: var(--pink); display: block; margin-bottom: 4px; }
+    .tip-item code {
+      background: var(--pink-bg);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: var(--purple);
+    }
+
+    /* 通知 Toast */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: white;
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 并发控制 */
+    .concurrency-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .concurrency-row label { font-size: 13px; color: var(--text-sub); }
+    .concurrency-row input[type=range] { width: 120px; accent-color: var(--pink); }
+    .concurrency-val { font-size: 13px; font-weight: 700; color: var(--pink); min-width: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="emoji">🌸</span>
+  <h1>中文 → 驼峰英文命名</h1>
+  <p>代码字段命名神器 · 支持批量翻译 · 免费大模型加持</p>
+</div>
+
+<!-- 配置卡片 -->
+<div class="card">
+  <div class="card-title">⚙️ 翻译引擎配置</div>
+
+  <div class="model-bar">
+    <label>翻译引擎：</label>
+    <select id="modelSelect" onchange="onModelChange()">
+      <optgroup label="🆓 完全免费（无需Key）">
+        <option value="mymemory">MyMemory 免费翻译（推荐，每天5000次）</option>
+        <option value="lingva">Lingva Translate（完全免费）</option>
+      </optgroup>
+      <optgroup label="🔑 需要 API Key（免费额度）">
+        <option value="deepseek">DeepSeek API（免费注册送额度）</option>
+        <option value="qianwen">通义千问 Qwen（免费额度）</option>
+        <option value="zhipu">智谱 GLM（免费额度）</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="apikey-row" id="apikeyRow" style="display:none">
+    <label>API Key：</label>
+    <input type="password" id="apiKeyInput" placeholder="请输入 API Key..." />
+  </div>
+  <div class="apikey-hint" id="apikeyHint" style="display:none; margin-bottom:14px;"></div>
+
+  <div class="concurrency-row">
+    <label>并发数：</label>
+    <input type="range" id="concurrencySlider" min="1" max="5" value="3" oninput="document.getElementById('concurrencyVal').textContent=this.value" />
+    <span class="concurrency-val" id="concurrencyVal">3</span>
+    <label style="margin-left:16px">延迟(ms)：</label>
+    <input type="range" id="delaySlider" min="0" max="2000" step="100" value="300" oninput="document.getElementById('delayVal').textContent=this.value" />
+    <span class="concurrency-val" id="delayVal">300</span>
+  </div>
+</div>
+
+<!-- 输入卡片 -->
+<div class="card">
+  <div class="card-title">✏️ 输入中文词语</div>
+  <div class="input-section">
+    <div class="input-label">每行一个词语，支持批量输入（可包含中文描述，如"用户姓名"、"订单创建时间"等）</div>
+    <textarea id="inputText" placeholder="用户姓名&#10;订单创建时间&#10;商品库存数量&#10;收货地址&#10;支付状态"></textarea>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="translateBtn" onclick="startTranslate()">
+      🚀 开始翻译
+    </button>
+    <button class="btn btn-secondary" onclick="loadExample()">📝 加载示例</button>
+    <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清空</button>
+  </div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text" id="progressText">0 / 0</div>
+  </div>
+</div>
+
+<!-- 结果卡片 -->
+<div class="card">
+  <div class="result-header">
+    <div class="result-title">✨ 翻译结果</div>
+    <div class="result-actions">
+      <button class="btn-sm" onclick="copyAllCamel()">📋 复制全部</button>
+      <button class="btn-sm" onclick="exportCSV()">⬇️ 导出CSV</button>
+    </div>
+  </div>
+  <div class="result-table-wrap">
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>中文原文</th>
+          <th>驼峰英文</th>
+          <th>状态</th>
+          <th>复制</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <div class="icon">🌸</div>
+              <p>输入中文词语后点击「开始翻译」喵～</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 使用说明 -->
+<div class="tips">
+  <div class="card-title" style="max-width:860px; margin: 0 auto 12px;">💡 使用说明</div>
+  <div class="tips-grid">
+    <div class="tip-item">
+      <strong>🆓 MyMemory（推荐）</strong>
+      完全免费，无需注册，每天5000次翻译额度，适合日常使用。
+    </div>
+    <div class="tip-item">
+      <strong>🤖 DeepSeek API</strong>
+      注册即送免费额度，翻译质量高，适合专业字段命名。获取Key：<a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a>
+    </div>
+    <div class="tip-item">
+      <strong>✨ 通义千问</strong>
+      阿里云免费额度，中文理解强。获取Key：<a href="https://dashscope.aliyun.com" target="_blank">dashscope.aliyun.com</a>
+    </div>
+    <div class="tip-item">
+      <strong>🧠 驼峰规则</strong>
+      首字母小写，如：<code>用户姓名</code> → <code>userName</code>，<code>订单创建时间</code> → <code>orderCreateTime</code>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===================== 配置 =====================
+const MODEL_HINTS = {
+  deepseek: '获取免费Key：<a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> · 新用户送10元额度',
+  qianwen: '获取免费Key：<a href="https://dashscope.aliyun.com" target="_blank">dashscope.aliyun.com</a> · 注册有免费额度',
+  zhipu: '获取免费Key：<a href="https://open.bigmodel.cn" target="_blank">open.bigmodel.cn</a> · 注册送免费额度',
+};
+
+function onModelChange() {
+  const model = document.getElementById('modelSelect').value;
+  const needKey = ['deepseek','qianwen','zhipu'].includes(model);
+  document.getElementById('apikeyRow').style.display = needKey ? 'flex' : 'none';
+  document.getElementById('apikeyHint').style.display = needKey ? 'block' : 'none';
+  if (needKey) document.getElementById('apikeyHint').innerHTML = '💡 ' + MODEL_HINTS[model];
+}
+
+// ===================== 翻译核心 =====================
+
+async function translateOneChinese(text, model, apiKey) {
+  const prompt = `将以下中文词语翻译成英文，用于代码字段命名（camelCase小驼峰），直接返回英文单词或多个单词的驼峰组合，不加任何解释，不加引号，只返回结果。\n中文：${text}`;
+  
+  if (model === 'mymemory') {
+    return await translateMyMemory(text);
+  } else if (model === 'lingva') {
+    return await translateLingva(text);
+  } else if (model === 'deepseek') {
+    return await translateDeepSeek(text, apiKey, prompt);
+  } else if (model === 'qianwen') {
+    return await translateQianwen(text, apiKey, prompt);
+  } else if (model === 'zhipu') {
+    return await translateZhipu(text, apiKey, prompt);
+  }
+  throw new Error('未知引擎');
+}
+
+// MyMemory 免费翻译
+async function translateMyMemory(text) {
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh|en`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if (d.responseStatus === 200) {
+    return toCamelCase(d.responseData.translatedText);
+  }
+  throw new Error(d.responseDetails || '翻译失败');
+}
+
+// Lingva 翻译
+async function translateLingva(text) {
+  const url = `https://lingva.ml/api/v1/zh/en/${encodeURIComponent(text)}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if (d.translation) return toCamelCase(d.translation);
+  throw new Error('Lingva翻译失败');
+}
+
+// DeepSeek API
+async function translateDeepSeek(text, apiKey, prompt) {
+  const r = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 60
+    })
+  });
+  const d = await r.json();
+  if (d.choices?.[0]?.message?.content) {
+    return cleanCamel(d.choices[0].message.content.trim());
+  }
+  throw new Error(d.error?.message || 'DeepSeek API错误');
+}
+
+// 通义千问
+async function translateQianwen(text, apiKey, prompt) {
+  const r = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'qwen-turbo',
+      input: { messages: [{ role: 'user', content: prompt }] },
+      parameters: { result_format: 'message', temperature: 0.1, max_tokens: 60 }
+    })
+  });
+  const d = await r.json();
+  if (d.output?.choices?.[0]?.message?.content) {
+    return cleanCamel(d.output.choices[0].message.content.trim());
+  }
+  throw new Error(d.message || '千问API错误');
+}
+
+// 智谱 GLM
+async function translateZhipu(text, apiKey, prompt) {
+  const r = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'glm-4-flash',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 60
+    })
+  });
+  const d = await r.json();
+  if (d.choices?.[0]?.message?.content) {
+    return cleanCamel(d.choices[0].message.content.trim());
+  }
+  throw new Error(d.error?.message || '智谱API错误');
+}
+
+// ===================== 驼峰处理 =====================
+
+function toCamelCase(str) {
+  // 清理、分词、转驼峰
+  let s = str
+    .replace(/[^a-zA-Z0-9\s_-]/g, ' ')  // 去非法字符
+    .trim()
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ');
+  const words = s.split(' ').filter(w => w.length > 0);
+  if (words.length === 0) return '';
+  return words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+}
+
+function cleanCamel(str) {
+  // 模型返回可能有多余内容，提取第一个合法标识符
+  // 尝试直接识别驼峰
+  let s = str.replace(/[\n\r"'`]/g, '').trim();
+  // 如果有空格说明模型没直接给驼峰，手动转
+  if (/\s/.test(s)) return toCamelCase(s);
+  // 确保首字母小写
+  if (s.length === 0) return '';
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+// ===================== 批量翻译 =====================
+let isTranslating = false;
+
+async function startTranslate() {
+  if (isTranslating) return;
+  const raw = document.getElementById('inputText').value.trim();
+  if (!raw) { showToast('请先输入中文词语喵～'); return; }
+
+  const model = document.getElementById('modelSelect').value;
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (['deepseek','qianwen','zhipu'].includes(model) && !apiKey) {
+    showToast('请先输入 API Key 喵～'); return;
+  }
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) { showToast('没有有效内容喵～'); return; }
+
+  isTranslating = true;
+  document.getElementById('translateBtn').disabled = true;
+
+  const concurrency = parseInt(document.getElementById('concurrencySlider').value);
+  const delay = parseInt(document.getElementById('delaySlider').value);
+
+  // 初始化结果行
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = '';
+  const results = lines.map((line, i) => {
+    const tr = document.createElement('tr');
+    tr.id = `row-${i}`;
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td class="cell-zh">${escHtml(line)}</td>
+      <td class="cell-camel" id="camel-${i}">—</td>
+      <td id="status-${i}"><span class="status-badge badge-loading">翻译中…</span></td>
+      <td class="cell-copy"><button class="copy-btn" id="copybtn-${i}" onclick="copyCell(${i})" title="复制">📋</button></td>
+    `;
+    tbody.appendChild(tr);
+    return { line, index: i, result: null, error: null };
+  });
+
+  // 显示进度条
+  const progressWrap = document.getElementById('progressWrap');
+  progressWrap.style.display = 'block';
+  let done = 0;
+  const total = lines.length;
+
+  function updateProgress() {
+    const pct = Math.round(done / total * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `${done} / ${total}`;
+  }
+  updateProgress();
+
+  // 并发队列
+  let idx = 0;
+  async function worker() {
+    while (idx < results.length) {
+      const item = results[idx++];
+      try {
+        const camel = await translateOneChinese(item.line, model, apiKey);
+        item.result = camel;
+        document.getElementById(`camel-${item.index}`).textContent = camel;
+        document.getElementById(`status-${item.index}`).innerHTML = '<span class="status-badge badge-ok">✓ 成功</span>';
+      } catch(e) {
+        item.error = e.message;
+        document.getElementById(`camel-${item.index}`).textContent = '翻译失败';
+        document.getElementById(`status-${item.index}`).innerHTML = `<span class="status-badge badge-err" title="${escHtml(e.message)}">✗ 失败</span>`;
+      }
+      done++;
+      updateProgress();
+      if (delay > 0 && idx < results.length) await sleep(delay);
+    }
+  }
+
+  const workers = Array.from({length: concurrency}, () => worker());
+  await Promise.all(workers);
+
+  isTranslating = false;
+  document.getElementById('translateBtn').disabled = false;
+  progressWrap.style.display = 'none';
+  showToast(`✅ 翻译完成！共 ${total} 条，成功 ${results.filter(r=>r.result).length} 条喵～`);
+}
+
+// ===================== 工具函数 =====================
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copyCell(i) {
+  const val = document.getElementById(`camel-${i}`).textContent;
+  if (!val || val === '—' || val === '翻译失败') { showToast('还没有结果呢喵～'); return; }
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.getElementById(`copybtn-${i}`);
+    btn.textContent = '✅';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1500);
+    showToast(`已复制：${val}`);
+  });
+}
+
+function copyAllCamel() {
+  const cells = document.querySelectorAll('.cell-camel');
+  const vals = [...cells].map(c => c.textContent).filter(v => v && v !== '—' && v !== '翻译失败');
+  if (vals.length === 0) { showToast('还没有结果喵～'); return; }
+  navigator.clipboard.writeText(vals.join('\n')).then(() => {
+    showToast(`✅ 已复制 ${vals.length} 条结果喵！`);
+  });
+}
+
+function exportCSV() {
+  const rows = [['序号','中文原文','驼峰英文','状态']];
+  document.querySelectorAll('#resultBody tr').forEach((tr, i) => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length >= 4) {
+      rows.push([
+        tds[0].textContent.trim(),
+        tds[1].textContent.trim(),
+        tds[2].textContent.trim(),
+        tds[3].textContent.trim()
+      ]);
+    }
+  });
+  if (rows.length <= 1) { showToast('还没有结果喵～'); return; }
+  const csv = rows.map(r => r.map(c => `"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = '驼峰命名结果.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ CSV 已导出喵！');
+}
+
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  document.getElementById('resultBody').innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="icon">🌸</div><p>输入中文词语后点击「开始翻译」喵～</p></div></td></tr>`;
+  document.getElementById('progressWrap').style.display = 'none';
+}
+
+function loadExample() {
+  document.getElementById('inputText').value = `用户姓名\n订单创建时间\n商品库存数量\n收货地址\n支付状态\n商品分类编号\n优惠券金额\n手机号码\n账户余额\n发货物流单号`;
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
